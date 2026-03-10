@@ -49,6 +49,14 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
                 return OUT;
             }
 
+            /*
+            SAMPLE_TEXTURE2D    helper function that samples a texture using the provided sampler and UV coordinates
+            _Time.y * speed     can be used to create an animation effect by modifying the UV coordinates over time, creating a scrolling texture effect
+            frac(x)             get fractional part of x, useful for repeating textures
+            sin(x), cos(x)      can be used to create oscillating effects
+            lerp(a,b,t)         linear interpolation between a and b based on t (0 to 1), useful for blending colors or textures
+            */
+
             // newer syntax for same function -> fixed frag(v2f i) : SV_Target
             // IN holds UV coordinates
             half4 frag(Varyings IN) : SV_Target
