@@ -4,6 +4,8 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
     {
         [MainColor] _BaseColor("Base Color", Color) = (1, 1, 1, 1)
         [MainTexture] _BaseMap("Base Map", 2D) = "white" {}
+        _SecondMap("Second Map", 2D) = "white" {}
+        _FadeAmount("Fade Amount", Range(0, 1)) = 0.5
     }
 
     SubShader
@@ -33,12 +35,17 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
 
             TEXTURE2D(_BaseMap);
             SAMPLER(sampler_BaseMap);
+            TEXTURE2D(_SecondMap);
+            SAMPLER(sampler_SecondMap);
 
             CBUFFER_START(UnityPerMaterial)
                 half4 _BaseColor;
                 float4 _BaseMap_ST;
+                float4 _SecondMap_ST;
+                float _FadeAmount;
             CBUFFER_END
 
+            // Transforms 3d positions to screen space & passes UV coordinates [(0,0) (0,1) (1,0) (1,1)] to frag shader
             Varyings vert(Attributes IN)
             {
                 Varyings OUT;
@@ -46,11 +53,25 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
                 OUT.uv = TRANSFORM_TEX(IN.uv, _BaseMap);
                 return OUT;
             }
+            /*
+            SAMPLE_TEXTURE2D    helper function that samples a texture using the provided sampler and UV coordinates
+            _Time.y * speed     can be used to create an animation effect by modifying the UV coordinates over time, creating a scrolling texture effect
+            frac(x)             get fractional part of x, useful for repeating textures
+            sin(x), cos(x)      can be used to create oscillating effects
+            lerp(a,b,t)         linear interpolation between a and b based on t (0 to 1), useful for blending colors or textures
+            */
 
+            // newer syntax for same function -> fixed frag(v2f i) : SV_Target
+            // IN holds UV coordinates
             half4 frag(Varyings IN) : SV_Target
             {
-                half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, IN.uv) * _BaseColor;
-                return color;
+                // sample both textures 
+                half4 color1 = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, IN.uv) * _BaseColor;
+                half4 color2 = SAMPLE_TEXTURE2D(_SecondMap, sampler_SecondMap, IN.uv) * _BaseColor;
+
+                // blend the two colors based on the fade amount
+                return lerp(color1, color2, _FadeAmount);
+
             }
             ENDHLSL
         }
