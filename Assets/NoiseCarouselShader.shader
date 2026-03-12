@@ -4,6 +4,7 @@ Shader "Custom/NoiseCarouselShader"
     {
         [MainColor] _BaseColor("Base Color", Color) = (1, 1, 1, 1)
         [MainTexture] _BaseMap("Base Map", 2D) = "white" {}
+        _ScrollSpeed("Scroll Speed", float) = 0.5
     }
 
     SubShader
@@ -37,6 +38,7 @@ Shader "Custom/NoiseCarouselShader"
             CBUFFER_START(UnityPerMaterial)
                 half4 _BaseColor;
                 float4 _BaseMap_ST;
+                float _ScrollSpeed;
             CBUFFER_END
 
             Varyings vert(Attributes IN)
@@ -49,7 +51,14 @@ Shader "Custom/NoiseCarouselShader"
 
             half4 frag(Varyings IN) : SV_Target
             {
-                half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, IN.uv) * _BaseColor;
+                // Move the UV coordinates upward over time to create a scrolling effect
+                float2 scrollingUV = IN.uv;
+                scrollingUV.y -= _Time.y * _ScrollSpeed;
+
+                // Wrap the UV coordinates to create a seamless loop
+                scrollingUV = fmod(scrollingUV, 1.0); 
+
+                half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, scrollingUV) * _BaseColor;
                 return color;
             }
             ENDHLSL
