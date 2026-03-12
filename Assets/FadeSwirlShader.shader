@@ -6,7 +6,9 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
         [MainTexture] _BaseMap("Base Map", 2D) = "white" {}
         _SecondMap("Second Map", 2D) = "white" {}
         _FadeAmount("Fade Amount", Range(0, 1)) = 0.5
-        _SwirlStrength("Swirl Strength", Range(0, 10)) = 5.0
+        _FadeSpeed("Fade Speed", float) = 1.0
+        _FadeRange("Fade Range", Range(0, 1)) = 0.7
+        _SwirlStrength("Swirl Strength", Range(0, 25)) = 5.0
         _SwirlSpeed("Swirl Speed", float) = 1.0
     }
 
@@ -45,6 +47,8 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
                 float4 _BaseMap_ST;
                 float4 _SecondMap_ST;
                 float _FadeAmount;
+                float _FadeSpeed;
+                float _FadeRange;
                 float _SwirlStrength;
                 float _SwirlSpeed;
             CBUFFER_END
@@ -80,23 +84,25 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
                 // angle in radians
                 // aka what direction from center -> thinking of it like a compass
                 float angle = atan2(centeredUV.y, centeredUV.x); 
-
                 float rotation = 1.0 - dist;
-                float swirlAmount = rotation * _SwirlStrength;
-                float rotationTime = _Time.y * _SwirlSpeed;
 
-                // apply rotation and amount of time spent rotating
-                angle += swirlAmount + rotationTime;
+                float swirlOscillation = sin(_Time.y * _SwirlSpeed);
+                float fadeOscillation = cos(_Time.y * _SwirlSpeed);
+                
+                float fade = (fadeOscillation + 1.0) * 0.5;
+                fade = smoothstep(0.5 - _FadeRange, 0.5 + _FadeRange, fade); 
+
+                angle += rotation * _SwirlStrength * swirlOscillation;
 
                 // convert back to cartesian coordinates
                 float2 swirlUV = float2(cos(angle), sin(angle)) * dist + uvCenter;
 
-                // sample both textures 
-                half4 color1 = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, IN.uv) * _BaseColor;
-                half4 color2 = SAMPLE_TEXTURE2D(_SecondMap, sampler_SecondMap, IN.uv) * _BaseColor;
+                // sample both textures making sure to use the swirlUV coordinates
+                half4 color1 = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, swirlUV) * _BaseColor;
+                half4 color2 = SAMPLE_TEXTURE2D(_SecondMap, sampler_SecondMap, swirlUV) * _BaseColor;
 
                 // blend the two colors based on the fade amount
-                half4 finalcolor = lerp(color1, color2, _FadeAmount);
+                half4 finalcolor = lerp(color1, color2, fade);
 
                 return finalcolor;
 
