@@ -6,7 +6,7 @@ Shader "Custom/NoiseCarouselShader"
         [MainTexture] _BaseMap("Base Map", 2D) = "white" {}
         _ScrollSpeed("Scroll Speed", float) = 0.5
         _NoiseScale("Noise Scale", float) = 50.0
-        _NoiseStrength("Noise Strength", float) = 0.3
+        _NoiseStrength("Noise Strength", float) = 0.5
     }
 
     SubShader
@@ -72,8 +72,8 @@ Shader "Custom/NoiseCarouselShader"
 
                 // Generate noise based on UV coordinates and time
                 float noise = randomNoise2(IN.uv * _NoiseScale + _Time.y);
-
-                half finalColor = lerp(color, half4(1,1,1,1), noise * _NoiseStrength);
+                half4 white = half4(1, 1, 1, 1);
+                half4 finalColor = lerp(color, white, noise * _NoiseStrength);
 
                 return finalColor;
             }
