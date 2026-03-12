@@ -6,8 +6,8 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
         [MainTexture] _BaseMap("Base Map", 2D) = "white" {}
         _SecondMap("Second Map", 2D) = "white" {}
         _FadeRange("Fade Range", Range(0, 1)) = 0.3
-        _SwirlStrength("Swirl Strength", Range(0, 20)) = 5.0
-        _SwirlSpeed("Swirl Speed", float) = 1.0
+        _SwirlStrength("Swirl Strength", Range(0, 20)) = 10.0
+        _SwirlSpeed("Swirl Speed", float) = 0.5
     }
 
     SubShader
