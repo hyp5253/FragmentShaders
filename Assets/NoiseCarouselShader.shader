@@ -5,6 +5,8 @@ Shader "Custom/NoiseCarouselShader"
         [MainColor] _BaseColor("Base Color", Color) = (1, 1, 1, 1)
         [MainTexture] _BaseMap("Base Map", 2D) = "white" {}
         _ScrollSpeed("Scroll Speed", float) = 0.5
+        _NoiseScale("Noise Scale", float) = 50.0
+        _NoiseStrength("Noise Strength", float) = 0.3
     }
 
     SubShader
@@ -39,7 +41,15 @@ Shader "Custom/NoiseCarouselShader"
                 half4 _BaseColor;
                 float4 _BaseMap_ST;
                 float _ScrollSpeed;
+                float _NoiseScale;
+                float _NoiseStrength;
             CBUFFER_END
+
+            // It is convention to put helper functions after constant buffers
+            float randomNoise2(float2 seed)
+            {
+                return frac(sin(dot(seed, float2(12.9898, 78.233))) * 43758.5453);
+            }
 
             Varyings vert(Attributes IN)
             {
@@ -55,11 +65,17 @@ Shader "Custom/NoiseCarouselShader"
                 float2 scrollingUV = IN.uv;
                 scrollingUV.y -= _Time.y * _ScrollSpeed;
 
-                // Wrap the UV coordinates to create a seamless loop
-                scrollingUV = fmod(scrollingUV, 1.0); 
+                // Wrap the UV coordinates using frac convention
+                scrollingUV = frac(scrollingUV); 
 
                 half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, scrollingUV) * _BaseColor;
-                return color;
+
+                // Generate noise based on UV coordinates and time
+                float noise = randomNoise2(IN.uv * _NoiseScale + _Time.y);
+
+                half finalColor = lerp(color, half4(1,1,1,1), noise * _NoiseStrength);
+
+                return finalColor;
             }
             ENDHLSL
         }
