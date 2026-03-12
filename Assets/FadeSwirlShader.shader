@@ -5,10 +5,8 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
         [MainColor] _BaseColor("Base Color", Color) = (1, 1, 1, 1)
         [MainTexture] _BaseMap("Base Map", 2D) = "white" {}
         _SecondMap("Second Map", 2D) = "white" {}
-        _FadeAmount("Fade Amount", Range(0, 1)) = 0.5
-        _FadeSpeed("Fade Speed", float) = 1.0
-        _FadeRange("Fade Range", Range(0, 1)) = 0.7
-        _SwirlStrength("Swirl Strength", Range(0, 25)) = 5.0
+        _FadeRange("Fade Range", Range(0, 1)) = 0.3
+        _SwirlStrength("Swirl Strength", Range(0, 20)) = 5.0
         _SwirlSpeed("Swirl Speed", float) = 1.0
     }
 
@@ -46,8 +44,6 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
                 half4 _BaseColor;
                 float4 _BaseMap_ST;
                 float4 _SecondMap_ST;
-                float _FadeAmount;
-                float _FadeSpeed;
                 float _FadeRange;
                 float _SwirlStrength;
                 float _SwirlSpeed;
@@ -86,15 +82,18 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
                 float angle = atan2(centeredUV.y, centeredUV.x); 
                 float rotation = 1.0 - dist;
 
+                // create oscillation for swirl and fade based on time and speed
                 float swirlOscillation = sin(_Time.y * _SwirlSpeed);
                 float fadeOscillation = cos(_Time.y * _SwirlSpeed);
                 
+                // calculate fade amount based on oscillation and distance from center, then apply smoothstep for smoother transition
                 float fade = (fadeOscillation + 1.0) * 0.5;
                 fade = smoothstep(0.5 - _FadeRange, 0.5 + _FadeRange, fade); 
 
+                //apply swirl effect
                 angle += rotation * _SwirlStrength * swirlOscillation;
 
-                // convert back to cartesian coordinates
+                // convert from polar back to cartesian coordinates
                 float2 swirlUV = float2(cos(angle), sin(angle)) * dist + uvCenter;
 
                 // sample both textures making sure to use the swirlUV coordinates
