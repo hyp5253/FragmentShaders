@@ -69,8 +69,10 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
             // IN holds UV coordinates
             half4 frag(Varyings IN) : SV_Target
             {
+                float2 uvCenter = 0.5;
+
                 // center UV around (0,0) for rotation so botleft is (-0.5, -0.5) and topright is (0.5, 0.5)
-                float2 centeredUV = IN.uv - 0.5; 
+                float2 centeredUV = IN.uv - uvCenter; 
 
                 // distance from center
                 float dist = length(centeredUV); 
@@ -85,6 +87,9 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
 
                 // apply rotation and amount of time spent rotating
                 angle += swirlAmount + rotationTime;
+
+                // convert back to cartesian coordinates
+                float2 swirlUV = float2(cos(angle), sin(angle)) * dist + uvCenter;
 
                 // sample both textures 
                 half4 color1 = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, IN.uv) * _BaseColor;
