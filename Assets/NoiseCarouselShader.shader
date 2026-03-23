@@ -72,8 +72,8 @@ Shader "Custom/NoiseCarouselShader"
 
                 // Generate noise based on UV coordinates and time
                 float noise = randomNoise2(IN.uv * _NoiseScale + _Time.y);
-                half4 white = half4(1, 1, 1, 1);
-                half4 finalColor = lerp(color, white, noise * _NoiseStrength);
+                half4 grey = half4(0.45, 0.45, 0.45, 1);
+                half4 finalColor = lerp(color, grey, noise * _NoiseStrength);
 
                 return finalColor;
             }
