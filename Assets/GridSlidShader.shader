@@ -49,6 +49,14 @@ Shader "Custom/GridSlidShader"
 
             half4 frag(Varyings IN) : SV_Target
             {
+                // the grid has 16 titles total 
+                float2 gridTileCount = float2(4.0, 4.0)
+
+                float2 phaseCycleSpeed = 0.25;
+                float2 tileShiftAmount = 0.35;
+
+
+
                 half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, IN.uv) * _BaseColor;
                 return color;
             }
