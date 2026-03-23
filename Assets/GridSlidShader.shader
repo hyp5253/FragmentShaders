@@ -49,23 +49,21 @@ Shader "Custom/GridSlidShader"
 
             half4 frag(Varyings IN) : SV_Target
             {
-                // the grid has 16 titles total 
+                // the grid has 16 tiles total 
                 float2 gridTileCount = float2(4.0, 4.0);
 
+                // animation controls
                 float phaseCycleSpeed = 0.25;
                 float tileShiftAmount = 0.5;
 
-                // U means horizontal and V means vertical both are in range [0,1]
-                // scale up UVs to match the number of tiles in the grid
-                // instead its now [0, 4] 
+                // scale up UVs to match the number of tiles in the grid [0,4]
                 float2 gridUV = IN.uv * gridTileCount; 
-
-                // which tile we are on (0,0) (0,1) (1,0) (1,1) ... (3,3)
                 float2 tileIndex = floor(gridUV); 
 
-                // the UVs within each tile (0,0) to (1,1)
+                // the UVs within each tile (0,0) to (1,1) aka local position to tile
                 float2 tileUV = frac(gridUV); 
 
+                // calculate the current position in the animation cycle (0 to 4)
                 float phasePos = frac(_Time.y * phaseCycleSpeed) * 4.0;
                 float phase = floor(phasePos);
                 
@@ -94,15 +92,14 @@ Shader "Custom/GridSlidShader"
                     offsetTile = lerp(D, A, frac(phasePos));
                 }
 
-                // 0 for even tiles, 1 for odd tiles
-                float parity = frac((tileIndex.x + tileIndex.y) * 0.5) * 2.0; 
+                // each tile has an idx (x,y) and the sum of those gives us an even or odd int
+                // -1 for even tiles, +1 for odd tiles
+                float signV = frac((tileIndex.x + tileIndex.y) * 0.5) * 4.0 - 1.0; 
 
-                // +1 for even tiles, -1 for odd tiles
-                float signV = parity * 2.0 - 1.0; 
-
+                // convert from tileUV back to normal UV system
                 float2 shiftedUV = frac((tileIndex + tileUV + offsetTile * signV) / gridTileCount);
 
-
+                // sample the texture
                 half4 color = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, shiftedUV) * _BaseColor;
                 return color;
             }

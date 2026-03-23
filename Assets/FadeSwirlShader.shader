@@ -57,36 +57,27 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
                 OUT.uv = TRANSFORM_TEX(IN.uv, _BaseMap);
                 return OUT;
             }
-            /*
-            SAMPLE_TEXTURE2D    helper function that samples a texture using the provided sampler and UV coordinates
-            _Time.y * speed     can be used to create an animation effect by modifying the UV coordinates over time, creating a scrolling texture effect
-            frac(x)             get fractional part of x, useful for repeating textures
-            sin(x), cos(x)      can be used to create oscillating effects
-            lerp(a,b,t)         linear interpolation between a and b based on t (0 to 1), useful for blending colors or textures
-            */
 
             // newer syntax for same function -> fixed frag(v2f i) : SV_Target
-            // IN holds UV coordinates
             half4 frag(Varyings IN) : SV_Target
             {
                 float2 uvCenter = 0.5;
 
                 // center UV around (0,0) for rotation so botleft is (-0.5, -0.5) and topright is (0.5, 0.5)
                 float2 centeredUV = IN.uv - uvCenter; 
-
-                // distance from center
-                float dist = length(centeredUV); 
+                float distFromCenter = length(centeredUV); 
 
                 // angle in radians
                 // aka what direction from center -> thinking of it like a compass
                 float angle = atan2(centeredUV.y, centeredUV.x); 
-                float rotation = 1.0 - dist;
+                float rotation = 1.0 - distFromCenter;
 
                 // create oscillation for swirl and fade based on time and speed
+                // sin and cos for proper offset
                 float swirlOscillation = sin(_Time.y * _SwirlSpeed);
                 float fadeOscillation = cos(_Time.y * _SwirlSpeed);
                 
-                // calculate fade amount based on oscillation and distance from center, then apply smoothstep for smoother transition
+                // calculate fade amount 
                 float fade = (fadeOscillation + 1.0) * 0.5;
                 fade = smoothstep(0.5 - _FadeRange, 0.5 + _FadeRange, fade); 
 
@@ -94,7 +85,7 @@ Shader "Custom/NewUnlitUniversalRenderPipelineShader"
                 angle += rotation * _SwirlStrength * swirlOscillation;
 
                 // convert from polar back to cartesian coordinates
-                float2 swirlUV = float2(cos(angle), sin(angle)) * dist + uvCenter;
+                float2 swirlUV = float2(cos(angle), sin(angle)) * distFromCenter + uvCenter;
 
                 // sample both textures making sure to use the swirlUV coordinates
                 half4 color1 = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, swirlUV) * _BaseColor;
